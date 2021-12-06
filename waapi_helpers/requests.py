@@ -340,7 +340,7 @@ def _walk_depth_first(client, start, props, ret_props, types):
 
     for obj in ret['return']:
         if types == 'any' or obj['type'] in types:
-            yield tuple(obj[p] for p in ret_props)
+            yield tuple(obj.get(p, None) for p in ret_props)
         yield from _walk_depth_first(client, obj['id'], props, ret_props, types)
 
 
