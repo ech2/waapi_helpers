@@ -326,6 +326,35 @@ def set_property_value(client: _w.WaapiClient,
                                               'value': value})
 
 
+def does_object_exist(client: _w.WaapiClient, guid_or_path: str) -> bool:
+    """
+    Check if an object exists. The function temporarily suppresses
+    WAMP logging regarding non-existent objects.
+
+    :param client: WAAPI client, it should be connected.
+    :param guid_or_path: Either an ID or a path of a Wwise object.
+    :return: True if the object exists, False otherwise.
+    """
+    old_log_level = suppress_waapi_logs()
+    guid, = get_object(client, guid_or_path, properties='id')
+    set_waapi_log_level(old_log_level)
+    return guid is not None
+
+
+def get_wproj_path(client: _w.WaapiClient) -> str:
+    """
+    Returns a path to the Wwise project, based on file path of Default Work Unit.
+    Sometimes it's more convenient to do through WAAPI than through argv.
+
+    :param client: WAAPI client, it should be connected.
+    :return: A path to the Wwise project.
+    """
+
+    wwu_path, = get_object(client, '\\Actor-Mixer Hierarchy\\Default Work Unit',
+                           properties='filePath')
+    return os.path.abspath(os.path.realpath(wwu_path))
+
+
 # ------------------------------------------
 
 def _walk_depth_first(client, start, props, ret_props, types):
