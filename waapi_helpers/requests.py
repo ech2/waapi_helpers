@@ -256,7 +256,7 @@ def get_property_names(client: _w.WaapiClient, obj_guid: str) -> _t.Sequence[str
 
 
 def get_property_value(client: _w.WaapiClient,
-                       obj_guid: str,
+                       guid_or_path: str,
                        property_name: str) -> _t.Optional[_WaapiValue]:
     """
     Get an object's property value.
@@ -265,7 +265,7 @@ def get_property_value(client: _w.WaapiClient,
     https://www.audiokinetic.com/library/edge/?source=SDK&id=waapi_query.html#waapi_query_return
 
     :param client: WAAPI client, it should be connected.
-    :param obj_guid: An ID of the object.
+    :param guid_or_path: An ID or a path of the object.
     :param property_name: A name of the property.
     :return: A value of the property, or None when the object or the property doesn't exist.
 
@@ -279,7 +279,7 @@ def get_property_value(client: _w.WaapiClient,
            bus_volume = get_property_value(client, master_bus_guid, '@BusVolume')
            print('Master bus volume is', bus_volume)
     """
-    value, = get_object(client, obj_guid, properties=[property_name])
+    value, = get_object(client, guid_or_path, properties=[property_name])
     return value
 
 
@@ -308,22 +308,41 @@ def get_bus_guid_from_name(client: _w.WaapiClient,
 
 
 def set_property_value(client: _w.WaapiClient,
-                       obj_guid: str,
+                       obj_guid_or_path: str,
                        property_name: str,
                        value: _WaapiValue):
     """
     Set a property of an object to the specified value.
 
     :param client: WAAPI client, it should be connected.
-    :param obj_guid: An ID of the object.
+    :param obj_guid_or_path: An ID or a path of the modified object.
     :param property_name: A name of the property.
     :param value: A value to assign to the property.
     """
     if value is None:
         return
-    client.call(_c.core_object_set_property, {'object': obj_guid,
+    client.call(_c.core_object_set_property, {'object': obj_guid_or_path,
                                               'property': property_name,
                                               'value': value})
+
+
+def set_reference(client: _w.WaapiClient,
+                  obj_guid_or_path: str,
+                  reference_name: str,
+                  ref_guid_or_path: str):
+    """
+    Set a property of an object to the specified value.
+
+    :param client: WAAPI client, it should be connected.
+    :param obj_guid_or_path: An ID or a path of the object being modified.
+    :param reference_name: A name of the reference.
+    :param ref_guid_or_path: An ID of or a path to the referenced object.
+    """
+    if ref_guid_or_path is None:
+        return
+    client.call(_c.core_object_set_property, {'object': obj_guid_or_path,
+                                              'reference': reference_name,
+                                              'value': ref_guid_or_path})
 
 
 def does_object_exist(client: _w.WaapiClient, guid_or_path: str) -> bool:
@@ -375,18 +394,19 @@ def _walk_depth_first(client, start, props, ret_props, types):
 
 def walk_wproj(client: _w.WaapiClient,
                start_guids_or_paths: _StrOrSeqOfStr,
-               properties: _t.Sequence[str] = None,
-               types: _t.Union[_t.Sequence[str], _t.Literal['any']] = 'any') -> _t.Iterator[_t.Tuple[_WaapiValue]]:
+               properties: _StrOrSeqOfStr = None,
+               types: _StrOrSeqOfStr = 'any') -> _t.Iterator[_t.Tuple[_WaapiValue]]:
     """
     Walk through descendants of an object and yield their properties.
-
-    The iterator performs depth-first traversal.
 
     :param client: WAAPI client, it should be connected.
     :param start_guids_or_paths: Either an ID or a path where iteration starts. If a list is passed,
                                  the iterator will walk descendants of each object in the list.
+                                 Can be either a str or a list of str.
     :param properties: A list of property names. Their values will be yielded as tuples. Default is ['id'].
+                       Can be either a str or a list of str.
     :param types: A list of object types which properties will be yielded during walk. Default is 'any'.
+                  Can be either a str or a list of str.
     :return: A tuple of property values in the order specified by the 'properties' argument.
              If a property doesn't exist, its corresponding value will be 'None'.
 
