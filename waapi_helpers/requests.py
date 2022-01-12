@@ -340,9 +340,9 @@ def set_reference(client: _w.WaapiClient,
     """
     if ref_guid_or_path is None:
         return
-    client.call(_c.core_object_set_property, {'object': obj_guid_or_path,
-                                              'reference': reference_name,
-                                              'value': ref_guid_or_path})
+    client.call(_c.core_object_set_reference, {'object': obj_guid_or_path,
+                                               'reference': reference_name,
+                                               'value': ref_guid_or_path})
 
 
 def does_object_exist(client: _w.WaapiClient, guid_or_path: str) -> bool:
