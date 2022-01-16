@@ -41,7 +41,7 @@ def _iter_dict_depth(d: _t.Dict[_t.Any, _t.Any], key: _t.Any) -> _t.Iterator:
 
 
 def _get_filename(path: str) -> str:
-    return os.path.splitext(os.path.basename(path))
+    return os.path.splitext(os.path.basename(path))[0]
 
 
 def _is_seq(x):
@@ -688,14 +688,14 @@ def import_audio(client: _w.WaapiClient,
     tag = '<Voice>' if is_voice else '<Sound>'  # haven't tested this one actually
     query = {
         'default': {
-            'importOperation': import_operation,
             'importLocation': parent_guid,
             'originalsSubFolder': orig_subfolder,
-            'imports': [{
-                'audioFile': wav,
-                'objectPath': tag + _get_filename(wav)
-            } for wav in wav_files]
-        }
+        },
+        'importOperation': import_operation,
+        'imports': [{
+            'audioFile': wav,
+            'objectPath': tag + _get_filename(wav)
+        } for wav in wav_files]
     }
     client.call(_c.core_audio_import, query)
 
